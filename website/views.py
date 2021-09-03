@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for
 from flask_login import login_required, current_user
-from .models import Post, User
+from .models import Comment, Post, User
 from . import db
 
 views = Blueprint("views", __name__)
@@ -53,6 +53,39 @@ def posts(username):
         flash("User doesn't exist!", category="error")
         return redirect(url_for("views.home"))
 
-    posts = Post.query.filter_by(author=user.id).all()
+    posts = User.posts
 
     return render_template("posts.html", user=current_user, posts=posts, username=username)
+
+@views.route("/create-comment/<post_id>", methods=["POST"])
+@login_required
+def create_comment(post_id):
+    text_data = request.form.get("text")
+
+    if not text_data:
+        flash("Comment cannot be empty", category="error")
+    else:
+        post = Post.query.filter_by(id=post_id)
+        if post:
+            comment = Comment(text=text_data, author=current_user.id, post_id=post_id)
+            db.session.add(comment)
+            db.session.commit()
+        else:
+            flash("Post doesn't exist.", category="error")
+
+    return redirect(url_for("views.home"))
+
+@views.route("/delete-comment/<comment_id>")
+@login_required
+def delete_comment(comment_id):
+    comment = Comment.query.filter_by(id=comment_id).first()
+
+    if not comment:
+        flash("Comment doesn't exist", category="error")
+    elif current_user.id != comment.author and current_user.id != comment.post.author:
+        flash("You do not have premission to delete this comment", category="error")
+    else:
+        db.session.delete(comment)
+        db.session.commit()
+    
+    return redirect(url_for("views.home"))
