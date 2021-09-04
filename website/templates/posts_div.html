@@ -8,15 +8,13 @@
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <a href="/post/{{ post.user.username }}">{{ post.user.username }}</a>
                     <div>
-                        {{ post.likes | length }}
+                        <span id="likes-count-{{ post.id }}">{{ post.likes | length }}</span>
                         {% if user.id in post.likes | map(attribute="author") | list %}
                             {% set icon_class = "fas fa-thumbs-up"%}
                         {% else %}
                             {% set icon_class = "far fa-thumbs-up"%}
                         {% endif %}
-                        <a href="/like-post/{{ post.id }}">
-                            <i class="{{ icon_class }}"></i>
-                        </a>
+                        <i class="{{ icon_class }}" id="like-button-{{ post.id }}" onclick="like({{ post.id }})"></i>
                         {% if user.id == post.author %}
                             <div class="btn-group">
                                 <button class="btn btn-small btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown"></button>
